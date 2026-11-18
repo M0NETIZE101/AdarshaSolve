@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Mic - Sender</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans">
+
+    <div class="w-full max-w-md bg-slate-800 rounded-2xl shadow-2xl p-6 space-y-6 border border-slate-700">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-emerald-400">Phone Microphone</h1>
+            <p class="text-slate-400 text-sm mt-1">Share your phone's mic with your PC</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="status-box" class="bg-slate-700/50 rounded-lg p-4 flex items-center justify-between">
+            <span class="text-sm font-medium">Status</span>
+            <span id="status-text" class="text-sm font-semibold text-yellow-400 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                Initializing...
+            </span>
+        </div>
+
+        <!-- Peer ID Display (for PC to connect) -->
+        <div id="peer-id-section" class="hidden">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Your Connection ID</label>
+            <div class="flex gap-2">
+                <input type="text" id="my-peer-id" readonly class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 text-center text-lg font-mono tracking-wider text-emerald-400 focus:outline-none focus:border-emerald-500" value="...">
+                <button id="copy-id-btn" class="bg-slate-700 hover:bg-slate-600 px-4 rounded-lg transition-colors text-sm font-medium">Copy</button>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 text-center">Enter this ID on your PC to connect.</p>
+        </div>
+
+        <!-- Audio Level Meter -->
+        <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+                <span class="text-slate-300">Input Level</span>
+                <span id="mic-status" class="text-red-400 font-medium">Muted</span>
+            </div>
+            <div class="h-3 bg-slate-700 rounded-full overflow-hidden">
+                <div id="volume-bar" class="h-full bg-emerald-500 w-0 transition-all duration-75 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <button id="start-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-emerald-900/50 disabled:opacity-50 disabled:cursor-not-allowed">
+            🎤 Start Microphone
+        </button>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const statusText = document.getElementById('status-text');
+        const statusBox = document.getElementById('status-box');
+        const peerIdSection = document.getElementById('peer-id-section');
+        const myPeerIdInput = document.getElementById('my-peer-id');
+        const copyIdBtn = document.getElementById('copy-id-btn');
+        const volumeBar = document.getElementById('volume-bar');
+        const micStatus = document.getElementById('mic-status');
+
+        let peer = null;
+        let localStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationFrameId = null;
+
+        // 1. Initialise PeerJS
+        function initPeer() {
+            const randomId = 'mic-' + Math.random().toString(36).substring(2, 8);
+            peer = new Peer(randomId, {
+                debug: 2 // Set to 0 for production
+            });
+
+            peer.on('open', (id) => {
+                updateStatus('Ready. Waiting for PC...', 'emerald');
+                myPeerIdInput.value = id;
+                peerIdSection.classList.remove('hidden');
+            });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                updateStatus('Error: ' + err.type, 'red');
+            });
+
+            peer.on('connection', (conn) => {
+                // A PC has connected
+                updateStatus('Connected to PC!', 'emerald');
+                statusBox.classList.add('border-emerald-500/50');
+            });
+        }
+
+        function updateStatus(text, color) {
+            statusText.innerHTML = `<span class="w-2 h-2 rounded-full bg-${color}-400 animate-pulse"></span> ${text}`;
+            statusText.className = `text-sm font-semibold text-${color}-400 flex items-center gap-2`;
+        }
+
+        // 2. Start Microphone and Send Audio
+        async function startMicrophone() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                
+                // Set up audio analyser for the UI meter
+                setupAudioMeter(localStream);
+                
+                // Call the PC (we assume only one connection for simplicity)
+                // In a real app, you'd get the PC's ID from a QR code or manual input.
+                // For this demo, we'll use a fixed ID for the PC receiver.
+                // IMPORTANT: You must enter this ID on the PC side too.
+                const pcPeerId = 'pc-receiver-123'; 
+                
+                // If you want dynamic IDs, you'd scan a QR code containing the PC's ID.
+                // For simplicity, we'll connect to a known ID.
+                // In the PC code, we will create a Peer with this exact ID.
+
+                // However, to make it truly zero-config, we'll have the PC generate an ID
+                // and the phone will connect to it. But for this demo, let's keep it simple:
+                // The phone acts as the caller and the PC acts as the receiver.
+                // The phone will call the PC's ID.
+                // We'll need the PC to have a known ID or we use PeerJS's default random ID.
+                // For a robust demo, let's use a fixed ID for the PC.
+                // See the PC code for the corresponding ID.
+                
+                // Let's use a fixed ID for the PC for this example.
+                const TARGET_PC_ID = 'my-pc-receiver'; 
+
+                const call = peer.call(TARGET_PC_ID, localStream);
+                if (call) {
+                    updateStatus('Streaming to PC...', 'emerald');
+                    micStatus.textContent = 'Live';
+                    micStatus.className = 'text-emerald-400 font-medium';
+                    startBtn.disabled = true;
+                    startBtn.textContent = '🔴 Streaming...';
+                } else {
+                    updateStatus('Failed to call PC. Is it online?', 'red');
+                }
+
+                // Handle call events
+                call.on('close', () => {
+                    updateStatus('Call ended.', 'yellow');
+                    startBtn.disabled = false;
+                    startBtn.textContent = '🎤 Start Microphone';
+                });
+
+            } catch (err) {
+                console.error('Mic error:', err);
+                alert('Could not access microphone. Please allow permissions and use HTTPS.');
+                updateStatus('Mic Access Denied', 'red');
+            }
+        }
+
+        // 3. Audio Level Meter
+        function setupAudioMeter(stream) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function updateMeter() {
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i];
+                }
+                let average = sum / dataArray.length;
+                let percentage = Math.min(100, (average / 128) * 100);
+                volumeBar.style.width = percentage + '%';
+                
+                // Change color based on level
+                if (percentage > 70) volumeBar.className = 'h-full bg-red-500 w-0 transition-all duration-75 rounded-full';
+                else if (percentage > 40) volumeBar.className = 'h-full bg-yellow-500 w-0 transition-all duration-75 rounded-full';
+                else volumeBar.className = 'h-full bg-emerald-500 w-0 transition-all duration-75 rounded-full';
+
+                animationFrameId = requestAnimationFrame(updateMeter);
+            }
+            updateMeter();
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startMicrophone);
+
+        copyIdBtn.addEventListener('click', () => {
+            myPeerIdInput.select();
+            document.execCommand('copy');
+            copyIdBtn.textContent = 'Copied!';
+            setTimeout(() => copyIdBtn.textContent = 'Copy', 2000);
+        });
+
+        // Initialise on load
+        initPeer();
+    </script>
+</body>
+</html>
