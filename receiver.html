@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Receiver - Microphone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col items-center justify-center p-4 font-sans">
+
+    <div class="w-full max-w-2xl bg-slate-900 rounded-2xl shadow-2xl p-8 space-y-6 border border-slate-800">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-blue-400">PC Microphone Receiver</h1>
+            <p class="text-slate-400 mt-1">Listening for your phone's microphone stream</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="status-container" class="bg-slate-800/50 rounded-xl p-6 flex flex-col items-center justify-center space-y-3 border border-slate-700">
+            <div id="status-icon" class="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-3xl">
+                📡
+            </div>
+            <span id="status-text" class="text-lg font-medium text-slate-300">Waiting for connection...</span>
+            <span id="peer-id-display" class="text-xs font-mono text-slate-500"></span>
+        </div>
+
+        <!-- Audio Visualizer (Incoming) -->
+        <div class="space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-slate-300">Incoming Audio</span>
+                <span id="audio-status" class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-700 text-slate-400">Silent</span>
+            </div>
+            <div class="h-4 bg-slate-800 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                <!-- Bars for visualizer -->
+                <div class="h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75" id="bar1"></div>
+                <div class="h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75" id="bar2"></div>
+                <div class="h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75" id="bar3"></div>
+                <div class="h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75" id="bar4"></div>
+                <div class="h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75" id="bar5"></div>
+                <div class="h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75" id="bar6"></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex gap-4">
+            <button id="reconnect-btn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-xl transition-all">
+                🔄 Reconnect
+            </button>
+            <button id="mute-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all">
+                🔇 Mute Playback
+            </button>
+        </div>
+        
+        <div class="text-center text-xs text-slate-500">
+            Ensure this tab is open and your phone is on the same network (or using the same PeerJS Cloud).
+        </div>
+    </div>
+
+    <script>
+        const statusText = document.getElementById('status-text');
+        const statusIcon = document.getElementById('status-icon');
+        const peerIdDisplay = document.getElementById('peer-id-display');
+        const audioStatus = document.getElementById('audio-status');
+        const reconnectBtn = document.getElementById('reconnect-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const bars = [
+            document.getElementById('bar1'), document.getElementById('bar2'),
+            document.getElementById('bar3'), document.getElementById('bar4'),
+            document.getElementById('bar5'), document.getElementById('bar6')
+        ];
+
+        let peer = null;
+        let audioElement = null;
+        let audioContext = null;
+        let analyser = null;
+        let isMuted = false;
+        let animationFrameId = null;
+
+        // IMPORTANT: This ID must match the TARGET_PC_ID in the sender code.
+        // In a production app, you would generate a unique ID and show it as a QR code.
+        const MY_PC_ID = 'my-pc-receiver'; 
+
+        // 1. Initialise PeerJS as the receiver
+        function initReceiver() {
+            // Clean up previous peer
+            if (peer) {
+                peer.destroy();
+            }
+
+            peer = new Peer(MY_PC_ID, {
+                debug: 2
+            });
+
+            peer.on('open', (id) => {
+                updateStatus('Ready. Waiting for phone...', '📡', 'slate');
+                peerIdDisplay.textContent = `Your PC ID: ${id}`;
+            });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                if (err.type === 'unavailable-id') {
+                    updateStatus('ID taken. Another receiver is already running. Click Reconnect.', '⚠️', 'red');
+                } else {
+                    updateStatus('Error: ' + err.type, '❌', 'red');
+                }
+            });
+
+            // 2. Handle incoming call from the phone
+            peer.on('call', (call) => {
+                updateStatus('Incoming call from phone...', '📞', 'yellow');
+                
+                // Answer the call (no local stream needed, we just receive)
+                call.answer(); 
+
+                call.on('stream', (remoteStream) => {
+                    updateStatus('Connected! Receiving audio.', '✅', 'emerald');
+                    statusIcon.classList.add('bg-emerald-500/20', 'text-emerald-400');
+                    
+                    // Play the audio
+                    if (!audioElement) {
+                        audioElement = new Audio();
+                        audioElement.autoplay = true;
+                        audioElement.controls = false; // We'll use custom controls
+                    }
+                    audioElement.srcObject = remoteStream;
+                    
+                    // Set up visualizer for the incoming stream
+                    setupVisualizer(remoteStream);
+                });
+
+                call.on('close', () => {
+                    updateStatus('Call ended. Waiting for phone...', '📡', 'slate');
+                    statusIcon.classList.remove('bg-emerald-500/20', 'text-emerald-400');
+                    audioStatus.textContent = 'Silent';
+                    audioStatus.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-slate-700 text-slate-400';
+                    bars.forEach(bar => bar.style.height = '20%');
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                });
+            });
+        }
+
+        function updateStatus(text, icon, color) {
+            statusText.textContent = text;
+            statusIcon.textContent = icon;
+            // Reset classes
+            statusIcon.className = 'w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-3xl';
+            if (color === 'emerald') statusIcon.classList.add('bg-emerald-500/20', 'text-emerald-400');
+            if (color === 'red') statusIcon.classList.add('bg-red-500/20', 'text-red-400');
+            if (color === 'yellow') statusIcon.classList.add('bg-yellow-500/20', 'text-yellow-400');
+        }
+
+        // 3. Visualizer for incoming audio
+        function setupVisualizer(stream) {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 64; // Fewer bars for simplicity
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function draw() {
+                analyser.getByteFrequencyData(dataArray);
+                
+                let hasSignal = false;
+                // Update bars (simplified)
+                for (let i = 0; i < bars.length; i++) {
+                    let value = dataArray[i] || 0;
+                    let percentage = Math.min(100, (value / 255) * 100);
+                    if (percentage > 10) hasSignal = true;
+                    bars[i].style.height = percentage + '%';
+                    // Change color on high levels
+                    if (percentage > 70) {
+                        bars[i].className = 'h-full bg-red-500 w-1/12 rounded-full transition-all duration-75';
+                    } else {
+                        bars[i].className = 'h-full bg-blue-500 w-1/12 rounded-full transition-all duration-75';
+                    }
+                }
+
+                if (hasSignal) {
+                    audioStatus.textContent = 'Active';
+                    audioStatus.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400';
+                } else {
+                    audioStatus.textContent = 'Silent';
+                    audioStatus.className = 'text-xs font-semibold px-2 py-1 rounded-full bg-slate-700 text-slate-400';
+                }
+
+                animationFrameId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // 4. Controls
+        reconnectBtn.addEventListener('click', () => {
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.srcObject = null;
+            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            initReceiver();
+        });
+
+        muteBtn.addEventListener('click', () => {
+            if (!audioElement) return;
+            isMuted = !isMuted;
+            audioElement.muted = isMuted;
+            muteBtn.textContent = isMuted ? '🔊 Unmute Playback' : '🔇 Mute Playback';
+            muteBtn.className = isMuted 
+                ? 'flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl transition-all'
+                : 'flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl transition-all';
+        });
+
+        // Initialise on load
+        initReceiver();
+    </script>
+</body>
+</html>
