@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020617">
+    <meta name="description" content="Turn your phone into a wireless microphone for your PC using WebRTC. No app install required.">
+    <title>MicLink — Phone as a Wireless Microphone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .reveal { animation: fadeUp .6s ease-out both; }
+        .reveal-1 { animation-delay: .05s; }
+        .reveal-2 { animation-delay: .15s; }
+        .reveal-3 { animation-delay: .25s; }
+        .reveal-4 { animation-delay: .35s; }
+    </style>
+</head>
+<body class="bg-slate-950 text-white antialiased selection:bg-emerald-500/30">
+
+    <!-- Decorative background -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <div class="absolute -top-40 -left-32 h-96 w-96 rounded-full bg-emerald-600/20 blur-3xl"></div>
+        <div class="absolute top-32 -right-32 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl"></div>
+        <div class="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-3xl"></div>
+    </div>
+
+    <!-- Nav -->
+    <header class="relative z-10 border-b border-slate-800/70 backdrop-blur-sm">
+        <nav class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 shadow-lg shadow-emerald-900/40">
+                    <svg class="h-5 w-5 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/>
+                    </svg>
+                </span>
+                <span class="text-lg font-semibold tracking-tight">MicLink</span>
+            </a>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="#check" class="hidden rounded-lg px-3 py-2 text-sm text-slate-400 transition hover:text-white sm:block">Compatibility</a>
+                <a href="#how" class="hidden rounded-lg px-3 py-2 text-sm text-slate-400 transition hover:text-white sm:block">How it works</a>
+                <a href="#start" class="rounded-lg bg-white/5 px-3 py-2 text-sm font-medium text-white ring-1 ring-inset ring-white/10 transition hover:bg-white/10 sm:px-4">
+                    Get started
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="relative z-10">
+
+        <!-- Hero -->
+        <section class="mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-6 sm:pt-24 lg:pt-28">
+            <div class="mx-auto max-w-3xl text-center">
+                <span class="reveal reveal-1 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+                    <span class="relative flex h-2 w-2">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+                    </span>
+                    WebRTC · No app install
+                </span>
+
+                <h1 class="reveal reveal-2 mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                    Turn your phone into a
+                    <span class="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">wireless microphone</span>
+                </h1>
+
+                <p class="reveal reveal-3 mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg">
+                    Stream your phone's microphone to your PC over a peer-to-peer WebRTC connection — low latency, no cables, no software to install.
+                </p>
+
+                <div class="reveal reveal-4 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <a href="sender.html" id="cta-sender"
+                       class="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/40 transition hover:bg-emerald-500 sm:w-auto sm:text-base">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/>
+                        </svg>
+                        Use this device as mic
+                        <svg class="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5"/>
+                        </svg>
+                    </a>
+                    <a href="receiver.html" id="cta-receiver"
+                       class="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800 px-6 py-3.5 text-sm font-semibold text-white ring-1 ring-inset ring-white/10 transition hover:bg-slate-700 sm:w-auto sm:text-base">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
+                        </svg>
+                        Receive on this PC
+                        <svg class="h-4 w-4 transition group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <p id="device-hint" class="mt-5 text-sm text-slate-500">
+                    Detecting your device…
+                </p>
+            </div>
+        </section>
+
+        <!-- Role cards -->
+        <section id="start" class="mx-auto max-w-6xl scroll-mt-24 px-4 pb-20 sm:px-6">
+            <div class="grid gap-5 lg:grid-cols-2">
+
+                <!-- Sender / Phone -->
+                <article id="card-sender"
+                    class="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-6 transition hover:border-emerald-500/50 sm:p-8">
+                    <div class="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl transition group-hover:bg-emerald-500/20"></div>
+
+                    <div class="relative flex items-start justify-between">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 ring-1 ring-inset ring-emerald-500/30">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/>
+                            </svg>
+                        </div>
+                        <span id="badge-sender" class="hidden rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+                            Recommended
+                        </span>
+                    </div>
+
+                    <h2 class="mt-5 text-xl font-semibold">I'm on my phone</h2>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-400">
+                        Open the sender page, allow microphone access, and share the connection ID with your PC. Keep the tab open while streaming.
+                    </p>
+
+                    <ul class="mt-5 space-y-2.5 text-sm text-slate-400">
+                        <li class="flex items-center gap-2">
+                            <svg class="h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Live audio level meter
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Works in any modern mobile browser
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="h-4 w-4 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Opus codec for clear voice audio
+                        </li>
+                    </ul>
+
+                    <a href="sender.html"
+                       class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold transition hover:bg-emerald-500">
+                        Open sender on this device
+                    </a>
+                </article>
+
+                <!-- Receiver / PC -->
+                <article id="card-receiver"
+                    class="group relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-6 transition hover:border-blue-500/50 sm:p-8">
+                    <div class="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-500/10 blur-2xl transition group-hover:bg-blue-500/20"></div>
+
+                    <div class="relative flex items-start justify-between">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/15 text-blue-400 ring-1 ring-inset ring-blue-500/30">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/>
+                            </svg>
+                        </div>
+                        <span id="badge-receiver" class="hidden rounded-full bg-blue-500/15 px-2.5 py-1 text-xs font-medium text-blue-300 ring-1 ring-inset ring-blue-500/30">
+                            Recommended
+                        </span>
+                    </div>
+
+                    <h2 class="mt-5 text-xl font-semibold">I'm on my PC</h2>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-400">
+                        Open the receiver page first and note the connection ID. It automatically answers incoming calls and plays the audio.
+                    </p>
+
+                    <ul class="mt-5 space-y-2.5 text-sm text-slate-400">
+                        <li class="flex items-center gap-2">
+                            <svg class="h-4 w-4 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Auto-answers the phone's call
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="h-4 w-4 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Incoming audio visualizer
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="h-4 w-4 shrink-0 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                            Mute and reconnect controls
+                        </li>
+                    </ul>
+
+                    <a href="receiver.html"
+                       class="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold transition hover:bg-blue-500">
+                        Open receiver on this device
+                    </a>
+                </article>
+            </div>
+        </section>
+
+        <!-- How it works -->
+        <section id="how" class="border-y border-slate-800/70 bg-slate-900/30 scroll-mt-24">
+            <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">How it works</h2>
+                    <p class="mt-3 text-slate-400">Three steps from pocket to microphone.</p>
+                </div>
+
+                <ol class="mt-10 grid gap-6 md:grid-cols-3">
+                    <li class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-sm font-bold text-emerald-400 ring-1 ring-inset ring-white/10">1</span>
+                        <h3 class="mt-4 font-semibold">Open the receiver on your PC</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-slate-400">
+                            It registers a PeerJS ID with the signalling cloud and waits for a call.
+                        </p>
+                    </li>
+                    <li class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-sm font-bold text-emerald-400 ring-1 ring-inset ring-white/10">2</span>
+                        <h3 class="mt-4 font-semibold">Start the mic on your phone</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-slate-400">
+                            The browser captures audio and calls the PC using the peer ID you entered.
+                        </p>
+                    </li>
+                    <li class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-sm font-bold text-emerald-400 ring-1 ring-inset ring-white/10">3</span>
+                        <h3 class="mt-4 font-semibold">Audio flows peer-to-peer</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-slate-400">
+                            WebRTC negotiates the connection; the receiver plays the stream instantly.
+                        </p>
+                    </li>
+                </ol>
+
+                <div class="mt-8 flex gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-sm text-amber-200/90">
+                    <svg class="h-5 w-5 shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                    </svg>
+                    <p>
+                        <span class="font-semibold text-amber-200">Demo pairing ID:</span>
+                        this build uses a fixed PC ID (<code class="rounded bg-slate-900 px-1.5 py-0.5 font-mono text-xs text-amber-200">my-pc-receiver</code>). If two people use it at once, click <em>Reconnect</em> on the receiver.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Compatibility check -->
+        <section id="check" class="mx-auto max-w-6xl scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">
+            <div class="grid gap-10 lg:grid-cols-2 lg:items-center">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">Compatibility check</h2>
+                    <p class="mt-3 max-w-md text-slate-400">
+                        Live results for this browser. All three checks must pass for the microphone to work.
+                    </p>
+                    <p id="check-summary" class="mt-4 text-sm font-medium text-slate-500">Running checks…</p>
+                </div>
+
+                <ul id="check-list" class="space-y-3">
+                    <!-- Rendered by JS -->
+                </ul>
+            </div>
+        </section>
+
+        <!-- FAQ / Good to know -->
+        <section class="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-6 sm:p-8">
+                <h2 class="text-lg font-semibold">Good to know</h2>
+                <dl class="mt-6 grid gap-6 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-slate-200">Why HTTPS?</dt>
+                        <dd class="mt-1 text-sm leading-relaxed text-slate-400">
+                            Browsers only grant microphone access on secure origins. Cloudflare Pages provides HTTPS by default.
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-slate-200">Can I use it as a system mic?</dt>
+                        <dd class="mt-1 text-sm leading-relaxed text-slate-400">
+                            This demo plays audio in the browser. Route it into apps like Zoom or OBS using a virtual audio device (VB-CABLE on Windows, BlackHole on macOS, PipeWire on Linux).
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-slate-200">Does audio pass through a server?</dt>
+                        <dd class="mt-1 text-sm leading-relaxed text-slate-400">
+                            No. PeerJS is only used for signalling — the media travels directly between your phone and PC.
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-slate-200">Does it work across networks?</dt>
+                        <dd class="mt-1 text-sm leading-relaxed text-slate-400">
+                            Usually, via STUN. Symmetric NATs may need a TURN server for reliable connections.
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-slate-800/70">
+        <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:px-6">
+            <p>MicLink — a WebRTC capability-sharing experiment.</p>
+            <p class="flex items-center gap-1.5">
+                Built with
+                <span class="text-emerald-400">WebRTC</span>,
+                <span class="text-blue-400">PeerJS</span> &
+                <span class="text-cyan-400">Tailwind</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        /* ---------- Device detection ---------- */
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024);
+
+        const deviceHint = document.getElementById('device-hint');
+        const badgeSender = document.getElementById('badge-sender');
+        const badgeReceiver = document.getElementById('badge-receiver');
+
+        if (isMobile) {
+            deviceHint.innerHTML = '📱 Phone detected — <span class="text-emerald-400 font-medium">open the sender</span> on this device, then the receiver on your PC.';
+            badgeSender.classList.remove('hidden');
+        } else {
+            deviceHint.innerHTML = '💻 Desktop detected — <span class="text-blue-400 font-medium">open the receiver</span> here, then the sender on your phone.';
+            badgeReceiver.classList.remove('hidden');
+        }
+
+        /* ---------- Compatibility checks ---------- */
+        const checks = [
+            {
+                label: 'Secure context (HTTPS)',
+                pass: window.isSecureContext,
+                hint: 'Microphone access requires HTTPS or localhost.'
+            },
+            {
+                label: 'Microphone API',
+                pass: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                hint: 'This browser does not expose getUserMedia().'
+            },
+            {
+                label: 'WebRTC support',
+                pass: typeof RTCPeerConnection !== 'undefined',
+                hint: 'WebRTC is required to stream audio peer-to-peer.'
+            }
+        ];
+
+        const list = document.getElementById('check-list');
+        const summary = document.getElementById('check-summary');
+
+        checks.forEach(check => {
+            const li = document.createElement('li');
+            li.className = 'flex items-start gap-3 rounded-xl border p-4 '
+                + (check.pass
+                    ? 'border-emerald-500/25 bg-emerald-500/5'
+                    : 'border-red-500/25 bg-red-500/5');
+
+            li.innerHTML = `
+                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${check.pass ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">
+                    ${check.pass
+                        ? '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>'
+                        : '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>'}
+                </span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-medium ${check.pass ? 'text-slate-200' : 'text-red-200'}">${check.label}</span>
+                    <span class="mt-0.5 block text-xs leading-relaxed ${check.pass ? 'text-slate-400' : 'text-red-300/80'}">
+                        ${check.pass ? 'Supported on this browser.' : check.hint}
+                    </span>
+                </span>
+            `;
+            list.appendChild(li);
+        });
+
+        const passed = checks.filter(c => c.pass).length;
+        if (passed === checks.length) {
+            summary.textContent = `All ${checks.length} checks passed — you're ready to go.`;
+            summary.className = 'mt-4 text-sm font-medium text-emerald-400';
+        } else {
+            summary.textContent = `${passed} of ${checks.length} checks passed — fix the failing items above.`;
+            summary.className = 'mt-4 text-sm font-medium text-red-400';
+        }
+    </script>
+</body>
+</html>
